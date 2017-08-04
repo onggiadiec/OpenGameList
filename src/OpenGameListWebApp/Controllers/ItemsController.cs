@@ -86,6 +86,7 @@ namespace OpenGameListWebApp.Controllers
         /// GET: api/items/GetRandom
         /// </summary>
         /// <returns></returns>
+        [HttpGet ("GetRandom")]
         public IActionResult GetRandom()
         {
             return GetRandom(DefaultNumberOfItems);
