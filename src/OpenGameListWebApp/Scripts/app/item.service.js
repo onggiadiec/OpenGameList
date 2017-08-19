@@ -69,6 +69,32 @@ System.register(["@angular/core", "@angular/http", "rxjs/Observable"], function(
                         .map(function (res) { return res.json(); })
                         .catch(this.handleError);
                 };
+                // calls the POST /api/items/ Web API method to add a new item.
+                ItemService.prototype.add = function (item) {
+                    var url = this.baseUrl;
+                    return this.http.post(url, JSON.stringify(item), this.getRequestOptions())
+                        .map(function (response) { return response.json(); })
+                        .catch(this.handleError);
+                };
+                // call the PUT /api/items/ web api method to update an existing item
+                ItemService.prototype.update = function (item) {
+                    var url = this.baseUrl + item.Id;
+                    return this.http.put(url, JSON.stringify(item), this.getRequestOptions())
+                        .map(function (response) { return response.json(); })
+                        .catch(this.handleError);
+                };
+                ItemService.prototype.delete = function (id) {
+                    var url = this.baseUrl + id;
+                    return this.http.delete(url)
+                        .catch(this.handleError);
+                };
+                ItemService.prototype.getRequestOptions = function () {
+                    return new http_1.RequestOptions({
+                        headers: new http_1.Headers({
+                            "Content-Type": "application/json"
+                        })
+                    });
+                };
                 ItemService.prototype.handleError = function (error) {
                     console.error(error);
                     return Observable_1.Observable.throw(error.json().error || "Server error");

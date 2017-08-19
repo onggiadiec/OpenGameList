@@ -52,7 +52,97 @@ namespace OpenGameListWebApp.Controllers
         public IActionResult Get(int id)
         {
             var item = DbContext.Items.FirstOrDefault(i => i.Id == id);
-            return new JsonResult(TinyMapper.Map<ItemViewModel>(item), DefaultJsonSettings);
+            if (item != null)
+            {
+                return new JsonResult(TinyMapper.Map<ItemViewModel>(item), DefaultJsonSettings);
+            }
+            else
+            {
+                return NotFound(new
+                {
+                    Error = $"Item ID {id} has not been found"
+                });
+            }
+        }
+        /// <summary>
+        /// POST: api/itmes
+        /// </summary>
+        /// <param name="ivm"></param>
+        /// <returns>Creates a new Item and reuturn it accordingly.</returns>
+        [HttpPost()]
+        public IActionResult Add([FromBody] ItemViewModel ivm)
+        {
+            if (ivm != null)
+            {
+                // create a new Item with the client-sent json data
+                var item = TinyMapper.Map<Item>(ivm);
+                //override any property that could be wise to set from server-side only
+                item.CreatedDate = item.LastModifiedDate = DateTime.Now;
+                // replace the following with the current user's id when authentication will be available
+                item.UserId = DbContext.Users.FirstOrDefault(u => u.UserName == "Admin").Id;
+                // add the new item
+                DbContext.Items.Add(item);
+                // persist the changes into the database
+                DbContext.SaveChanges();
+                // return the newly-created Item to the client.
+                return new JsonResult(TinyMapper.Map<ItemViewModel>(item), DefaultJsonSettings);
+            }
+            // return a generic HTTP Status 500 (Not Found) if the client payload is invalid.
+            return new StatusCodeResult(500);
+        }
+        /// <summary>
+        /// PUT: api/items/{id}
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="ivm"></param>
+        /// <returns></returns>
+        [HttpPut ("{id}")]
+        public IActionResult Update(int id, [FromBody] ItemViewModel ivm)
+        {
+            if (ivm != null)
+            {
+                var item = DbContext.Items.FirstOrDefault(i => i.Id == id);
+                if (item != null)
+                {
+                    // handle the update (on per-property basic)
+                    item.UserId = ivm.UserId;
+                    item.Description = ivm.Description;
+                    item.Flags = ivm.Flags;
+                    item.Notes = ivm.Notes;
+                    item.Text = ivm.Text;
+                    item.Title = ivm.Title;
+                    item.Type = ivm.Type;
+                    // override any property that could be wise to set from server-side only
+                    item.LastModifiedDate = DateTime.Now;
+                    DbContext.SaveChanges();
+
+                    return new JsonResult(TinyMapper.Map<ItemViewModel>(item), DefaultJsonSettings);
+                }
+            }
+            return NotFound(new
+            {
+                Error = $"Item ID {id} has not been found"
+            });
+        }
+        /// <summary>
+        /// DELETE: api/items/{id}
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>Deletes an Item, returning a HTTP status 200</returns>
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var item = DbContext.Items.FirstOrDefault(i => i.Id == id);
+            if (item != null)
+            {
+                // remove the item to delete from the DbContext
+                DbContext.Items.Remove(item);
+
+                DbContext.SaveChanges();
+
+                return new OkResult();
+            }
+            return NotFound(new {Error = $"Item ID {id} has not been found"});
         }
         #endregion RESTful Conventions
 
